@@ -1,6 +1,6 @@
 # Laravel Mail CSS Inliner
 
-[![GitHub Actions](https://github.com/stayallive/laravel-mail-css-inliner/workflows/run-tests/badge.svg)](https://github.com/stayallive/laravel-mail-css-inliner/actions)
+[![GitHub Actions](https://github.com/stayallive/laravel-mail-css-inliner/workflows/CI/badge.svg)](https://github.com/stayallive/laravel-mail-css-inliner/actions)
 [![Latest Stable Version](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/v/stable.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
 [![Latest Unstable Version](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/v/unstable.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
 [![Total Downloads](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/downloads.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
