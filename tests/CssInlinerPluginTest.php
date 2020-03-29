@@ -1,26 +1,19 @@
 <?php
 
-namespace Tests;
+namespace Stayallive\LaravelMailCssInliner\Tests;
 
-use Fedeisas\LaravelMailCssInliner\CssInlinerPlugin;
 use Swift_Mailer;
 use Swift_Message;
 use Swift_NullTransport;
 use PHPUnit\Framework\TestCase;
+use Stayallive\LaravelMailCssInliner\CssInlinerPlugin;
 
 class CssInlinerPluginTest extends TestCase
 {
-    /**
-     * @var array
-     */
-    protected $stubs;
+    /** @var array */
+    private $stubs;
 
-    /**
-     * @var array
-     */
-    protected $options;
-
-    protected static $stubDefinitions = [
+    private static $stubDefinitions = [
         'plain-text',
         'original-html',
         'original-html-with-css',
@@ -31,156 +24,118 @@ class CssInlinerPluginTest extends TestCase
         'converted-html-with-links-css',
     ];
 
-    public function setUp()
+    public function setUp(): void
     {
         foreach (self::$stubDefinitions as $stub) {
-            $this->stubs[$stub] = file_get_contents(__DIR__ . '/stubs/' . $stub . '.stub');
+            $this->stubs[$stub] = $this->cleanupHtmlStringForComparison(file_get_contents(
+                __DIR__ . "/stubs/{$stub}.stub"
+            ));
         }
-
-        $this->options = require(__DIR__ . '/../config/css-inliner.php');
     }
 
-    /** @test **/
-    public function itShouldConvertHtmlBody()
+
+    public function test_it_should_convert_html_body(): void
     {
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message(null, $this->stubs['original-html'], 'text/html');
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
+        $this->fakeSendMessageUsingInlinePlugin($message);
 
-        $message = Swift_Message::newInstance();
-
-        $message->setFrom('test@example.com');
-        $message->setTo('test2@example.com');
-        $message->setSubject('Test');
-        $message->setBody($this->stubs['original-html'], 'text/html');
-
-        $mailer->send($message);
-
-        $this->assertEquals($this->stubs['converted-html'], $message->getBody());
+        $this->assertBodyMatchesStub($message->getBody(), 'converted-html');
     }
 
-    /** @test **/
-    public function itShouldConvertHtmlBodyWithGivenCss()
+    public function test_it_should_convert_html_body_with_given_css(): void
     {
-        $this->options['css-files'] = [__DIR__ . '/css/test.css'];
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message(null, $this->stubs['original-html-with-css'], 'text/html');
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
+        $this->fakeSendMessageUsingInlinePlugin($message, [
+            __DIR__ . '/stubs/test.css',
+        ]);
 
-        $message = Swift_Message::newInstance();
-
-        $message->setFrom('test@example.com');
-        $message->setTo('test2@example.com');
-        $message->setSubject('Test');
-        $message->setBody($this->stubs['original-html-with-css'], 'text/html');
-
-        $mailer->send($message);
-
-        $this->assertEquals($this->stubs['converted-html-with-css'], $message->getBody());
+        $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-css');
     }
 
-    /** @test **/
-    public function itShouldConvertHtmlBodyAndTextParts()
+    public function test_it_should_convert_html_body_and_text_parts(): void
     {
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message;
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
-
-        $message = Swift_Message::newInstance();
-
-        $message->setFrom('test@example.com');
-        $message->setTo('test2@example.com');
-        $message->setSubject('Test');
         $message->setBody($this->stubs['original-html'], 'text/html');
         $message->addPart($this->stubs['plain-text'], 'text/plain');
 
-        $mailer->send($message);
+        $this->fakeSendMessageUsingInlinePlugin($message);
 
-        $children = $message->getChildren();
-
-        $this->assertEquals($this->stubs['converted-html'], $message->getBody());
-        $this->assertEquals($this->stubs['plain-text'], $children[0]->getBody());
+        $this->assertBodyMatchesStub($message->getBody(), 'converted-html');
+        $this->assertBodyMatchesStub($message->getChildren()[0]->getBody(), 'plain-text');
     }
 
-    /** @test **/
-    public function itShouldLeavePlainTextUnmodified()
+    public function test_it_should_leave_plain_text_unmodified(): void
     {
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message;
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
-
-        $message = Swift_Message::newInstance();
-
-        $message->setFrom('test@example.com');
-        $message->setTo('test2@example.com');
-        $message->setSubject('Test');
         $message->addPart($this->stubs['plain-text'], 'text/plain');
 
-        $mailer->send($message);
+        $this->fakeSendMessageUsingInlinePlugin($message);
 
-        $children = $message->getChildren();
-
-        $this->assertEquals($this->stubs['plain-text'], $children[0]->getBody());
+        $this->assertBodyMatchesStub($message->getChildren()[0]->getBody(), 'plain-text');
     }
 
-    /** @test **/
-    public function itShouldConvertHtmlBodyAsAPart()
+    public function test_it_should_convert_html_body_as_a_part(): void
     {
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message;
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
-
-        $message = Swift_Message::newInstance();
-
-        $message->setFrom('test@example.com');
-        $message->setTo('test2@example.com');
-        $message->setSubject('Test');
         $message->addPart($this->stubs['original-html'], 'text/html');
 
-        $mailer->send($message);
+        $this->fakeSendMessageUsingInlinePlugin($message);
 
-        $children = $message->getChildren();
-
-        $this->assertEquals($this->stubs['converted-html'], $children[0]->getBody());
+        $this->assertBodyMatchesStub($message->getChildren()[0]->getBody(), 'converted-html');
     }
 
-    /** @test **/
-    public function itShouldConvertHtmlBodyWithLinkCss()
+    public function test_it_should_convert_html_body_with_link_css(): void
     {
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message(null, $this->stubs['original-html-with-link-css'], 'text/html');
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
+        $this->fakeSendMessageUsingInlinePlugin($message);
 
-        $message = Swift_Message::newInstance();
-
-        $message->setFrom('test@example.com');
-        $message->setTo('test2@example.com');
-        $message->setSubject('Test');
-
-        $message->setBody($this->stubs['original-html-with-link-css'], 'text/html');
-
-        $mailer->send($message);
-
-        $this->assertEquals($this->stubs['converted-html-with-css'], $message->getBody());
+        $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-css');
     }
 
-    /** @test **/
-    public function itShouldConvertHtmlBodyWithLinksCss()
+    public function test_it_should_convert_html_body_with_links_css(): void
     {
-        $mailer = Swift_Mailer::newInstance(Swift_NullTransport::newInstance());
+        $message = new Swift_Message(null, $this->stubs['original-html-with-links-css'], 'text/html');
 
-        $mailer->registerPlugin(new CssInlinerPlugin($this->options));
+        $this->fakeSendMessageUsingInlinePlugin($message);
 
-        $message = Swift_Message::newInstance();
+        $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-links-css');
+    }
 
-        $message->setFrom('test@example.com');
+
+    private function assertBodyMatchesStub(string $body, string $stub): void
+    {
+        $body = $this->cleanupHtmlStringForComparison($body);
+
+        $this->assertEquals($this->stubs[$stub], $body);
+    }
+
+    private function cleanupHtmlStringForComparison(string $string): string
+    {
+        // Strip out all newlines and trim newlines from the start and end
+        $string = str_replace("\n", '', trim($string));
+
+        // Strip out any whitespace between HTML tags
+        $string = preg_replace('/(>)\s+(<\/?[a-z]+)/', '$1$2', $string);
+
+        return $string;
+    }
+
+    private function fakeSendMessageUsingInlinePlugin(Swift_Message $message, array $inlineCssFiles = []): void
+    {
+        $mailer = new Swift_Mailer(new Swift_NullTransport);
+
+        $mailer->registerPlugin(new CssInlinerPlugin($inlineCssFiles));
+
         $message->setTo('test2@example.com');
+        $message->setFrom('test@example.com');
         $message->setSubject('Test');
 
-        $message->setBody($this->stubs['original-html-with-links-css'], 'text/html');
-
         $mailer->send($message);
-
-        $this->assertEquals($this->stubs['converted-html-with-links-css'], $message->getBody());
     }
 }

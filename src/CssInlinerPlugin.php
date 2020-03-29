@@ -1,116 +1,98 @@
 <?php
 
-namespace Fedeisas\LaravelMailCssInliner;
+namespace Stayallive\LaravelMailCssInliner;
 
+use DOMDocument;
+use Swift_Events_SendEvent;
+use Swift_Events_SendListener;
 use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
 
-class CssInlinerPlugin implements \Swift_Events_SendListener
+class CssInlinerPlugin implements Swift_Events_SendListener
 {
-    /**
-     * @var CssToInlineStyles
-     */
+    /** @var \TijsVerkoyen\CssToInlineStyles\CssToInlineStyles */
     private $converter;
 
-    /**
-     * @var string
-     */
-    protected $css;
+    /** @var string */
+    private $cssToAlwaysInclude;
 
-    /**
-     * @param array $options options defined in the configuration file.
-     */
-    public function __construct(array $options)
+    public function __construct(array $filesToInline = [])
     {
-        $this->converter = new CssToInlineStyles();
-        $this->loadOptions($options);
+        $this->converter = new CssToInlineStyles;
+
+        $this->cssToAlwaysInclude = $this->loadCssFromFiles($filesToInline);
     }
 
-    /**
-     * @param \Swift_Events_SendEvent $evt
-     */
-    public function beforeSendPerformed(\Swift_Events_SendEvent $evt)
+    public function sendPerformed(Swift_Events_SendEvent $sendEvent)
     {
-        $message = $evt->getMessage();
+    }
+
+    public function beforeSendPerformed(Swift_Events_SendEvent $sendEvent)
+    {
+        $message = $sendEvent->getMessage();
 
         if ($message->getContentType() === 'text/html'
             || ($message->getContentType() === 'multipart/alternative' && $message->getBody())
             || ($message->getContentType() === 'multipart/mixed' && $message->getBody())
         ) {
-            $body = $this->loadCssFilesFromLinks($message->getBody());
-            $message->setBody($this->converter->convert($body, $this->css));
+            $message->setBody($this->processMailBody($message->getBody()));
         }
 
         foreach ($message->getChildren() as $part) {
             if (strpos($part->getContentType(), 'text/html') === 0) {
-                $body = $this->loadCssFilesFromLinks($part->getBody());
-                $part->setBody($this->converter->convert($body, $this->css));
+                $part->setBody($this->processMailBody($part->getBody()));
             }
         }
     }
 
-    /**
-     * Do nothing
-     *
-     * @param \Swift_Events_SendEvent $evt
-     */
-    public function sendPerformed(\Swift_Events_SendEvent $evt)
+    private function processMailBody(string $body): string
     {
-        // Do Nothing
+        [$cssFiles, $body] = $this->extractCssFilesFromMailBody($body);
+
+        return $this->converter->convert($body, $this->cssToAlwaysInclude . "\n" . $this->loadCssFromFiles($cssFiles));
     }
 
-    /**
-     * Load the options
-     * @param  array $options Options array
-     */
-    public function loadOptions($options)
+    private function loadCssFromFiles(array $cssFiles): string
     {
-        if (isset($options['css-files']) && count($options['css-files']) > 0) {
-            $this->css = '';
-            foreach ($options['css-files'] as $file) {
-                $this->css .= file_get_contents($file);
-            }
+        $css = '';
+
+        foreach ($cssFiles as $file) {
+            $css .= file_get_contents($file);
         }
+
+        return $css;
     }
 
-    /**
-     * Find CSS stylesheet links and load them
-     *
-     * Loads the body of the message and passes
-     * any link stylesheets to $this->css
-     * Removes any link elements
-     *
-     * @return string $message The message
-     */
-    public function loadCssFilesFromLinks($message)
+    private function extractCssFilesFromMailBody(string $message): array
     {
-        $dom = new \DOMDocument();
-        // set error level
-        $internalErrors = libxml_use_internal_errors(true);
-        
+        $dom = new DOMDocument;
+
+        $previousUseInternalErrors = libxml_use_internal_errors(true);
+
         $dom->loadHTML($message);
-        
-        // Restore error level
-        libxml_use_internal_errors($internalErrors);
+
+        libxml_use_internal_errors($previousUseInternalErrors);
+
         $link_tags = $dom->getElementsByTagName('link');
+
+        $cssFiles = [];
 
         if ($link_tags->length > 0) {
             do {
-                if ($link_tags->item(0)->getAttribute('rel') == "stylesheet") {
-                    $options['css-files'][] = $link_tags->item(0)->getAttribute('href');
+                if ($link_tags->item(0)->getAttribute('rel') === 'stylesheet') {
+                    $cssFiles[] = $link_tags->item(0)->getAttribute('href');
 
                     // remove the link node
                     $link_tags->item(0)->parentNode->removeChild($link_tags->item(0));
                 }
             } while ($link_tags->length > 0);
 
-            if (isset($options)) {
-                // reload the options
-                $this->loadOptions($options);
+            if (!empty($cssFiles)) {
+                $this->loadCssFromFiles($cssFiles);
             }
 
-            return $dom->saveHTML();
+            return [$cssFiles, $dom->saveHTML()];
         }
 
-        return $message;
+        return [$cssFiles, $message];
     }
 }

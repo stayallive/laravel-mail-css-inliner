@@ -1,5 +1,5 @@
-vendor/
-build/
-composer.phar
+build
 composer.lock
-.DS_Store
+vendor
+coverage
+.phpunit.result.cache

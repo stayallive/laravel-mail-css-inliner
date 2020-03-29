@@ -1,38 +1,41 @@
 {
-    "name": "fedeisas/laravel-mail-css-inliner",
-    "description": "Inline the CSS of your HTML emails using Laravel",
+    "name": "stayallive/laravel-mail-css-inliner",
+    "description": "Inline the CSS of your Laravel HTML emails.",
     "license": "MIT",
-    "keywords": ["laravel", "mailer", "css"],
+    "keywords": [
+        "laravel",
+        "laravel-package",
+        "mailer",
+        "css"
+    ],
     "authors": [
         {
-            "name": "Fede Isas",
-            "email": "fedeisas@hotmail.com"
+            "name": "Alex Bouma",
+            "email": "me@alexbouma.me"
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "illuminate/support": "~5.0|^6.0",
-        "tijsverkoyen/css-to-inline-styles": "~2.0"
+        "php": ">=7.3.0",
+        "illuminate/mail": "^7.0",
+        "illuminate/support": "^7.0",
+        "tijsverkoyen/css-to-inline-styles": "^2.2"
     },
-    "require-dev" : {
-        "phpunit/phpunit": "~5.7",
-        "squizlabs/php_codesniffer": "^2.3",
-        "swiftmailer/swiftmailer": "~5.0"
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "swiftmailer/swiftmailer": "^6.0"
     },
     "autoload": {
         "psr-4": {
-            "Fedeisas\\LaravelMailCssInliner\\": "src/"
+            "Stayallive\\LaravelMailCssInliner\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Stayallive\\LaravelMailCssInliner\\Tests\\": "tests"
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "check-style": "phpcs -p --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests",
-        "fix-style": "phpcbf -p --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests"
+        "test": "vendor/bin/phpunit"
     },
     "config": {
         "sort-packages": true
@@ -40,7 +43,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Fedeisas\\LaravelMailCssInliner\\LaravelMailCssInlinerServiceProvider"
+                "Stayallive\\LaravelMailCssInliner\\ServiceProvider"
             ]
         }
     }

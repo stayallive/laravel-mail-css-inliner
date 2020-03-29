@@ -1,7 +1,7 @@
 <html>
     <head>
-        <link rel="stylesheet" type="text/css" href="./tests/css/test.css">
-        <link rel="stylesheet" type="text/css" href="./tests/css/test2.css">
+        <link rel="stylesheet" type="text/css" href="./tests/stubs/test.css">
+        <link rel="stylesheet" type="text/css" href="./tests/stubs/test2.css">
     </head>
     <body>
         <div class="pixels-10">
