@@ -10,13 +10,13 @@ class ServiceProvider extends BaseServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/mail-css-inliner.php' => base_path('config/mail-css-inliner.php'),
+            __DIR__.'/../config/mail-css-inliner.php' => base_path('config/mail-css-inliner.php'),
         ], 'config');
     }
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/mail-css-inliner.php', 'mail-css-inliner');
+        $this->mergeConfigFrom(__DIR__.'/../config/mail-css-inliner.php', 'mail-css-inliner');
 
         $this->app->singleton(CssInlinerPlugin::class, static function ($app) {
             return new CssInlinerPlugin(

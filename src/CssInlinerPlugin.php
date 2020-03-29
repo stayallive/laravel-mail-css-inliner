@@ -48,7 +48,7 @@ class CssInlinerPlugin implements Swift_Events_SendListener
     {
         [$cssFiles, $body] = $this->extractCssFilesFromMailBody($body);
 
-        return $this->converter->convert($body, $this->cssToAlwaysInclude . "\n" . $this->loadCssFromFiles($cssFiles));
+        return $this->converter->convert($body, $this->cssToAlwaysInclude."\n".$this->loadCssFromFiles($cssFiles));
     }
 
     private function loadCssFromFiles(array $cssFiles): string
@@ -86,7 +86,7 @@ class CssInlinerPlugin implements Swift_Events_SendListener
                 }
             } while ($link_tags->length > 0);
 
-            if (!empty($cssFiles)) {
+            if (! empty($cssFiles)) {
                 $this->loadCssFromFiles($cssFiles);
             }
 

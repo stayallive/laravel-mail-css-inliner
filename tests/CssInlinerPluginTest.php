@@ -2,11 +2,11 @@
 
 namespace Stayallive\LaravelMailCssInliner\Tests;
 
+use PHPUnit\Framework\TestCase;
+use Stayallive\LaravelMailCssInliner\CssInlinerPlugin;
 use Swift_Mailer;
 use Swift_Message;
 use Swift_NullTransport;
-use PHPUnit\Framework\TestCase;
-use Stayallive\LaravelMailCssInliner\CssInlinerPlugin;
 
 class CssInlinerPluginTest extends TestCase
 {
@@ -28,11 +28,10 @@ class CssInlinerPluginTest extends TestCase
     {
         foreach (self::$stubDefinitions as $stub) {
             $this->stubs[$stub] = $this->cleanupHtmlStringForComparison(file_get_contents(
-                __DIR__ . "/stubs/{$stub}.stub"
+                __DIR__."/stubs/{$stub}.stub"
             ));
         }
     }
-
 
     public function test_it_should_convert_html_body(): void
     {
@@ -48,7 +47,7 @@ class CssInlinerPluginTest extends TestCase
         $message = new Swift_Message(null, $this->stubs['original-html-with-css'], 'text/html');
 
         $this->fakeSendMessageUsingInlinePlugin($message, [
-            __DIR__ . '/stubs/test.css',
+            __DIR__.'/stubs/test.css',
         ]);
 
         $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-css');
@@ -106,7 +105,6 @@ class CssInlinerPluginTest extends TestCase
 
         $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-links-css');
     }
-
 
     private function assertBodyMatchesStub(string $body, string $stub): void
     {
