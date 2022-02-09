@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   test:
@@ -8,10 +8,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        php: ["8.1", "8.0"]
-        laravel: [9.*]
-        dependency-version: [prefer-lowest, prefer-stable]
+        os: [ ubuntu-latest, windows-latest ]
+        php: [ "8.1", "8.0" ]
+        laravel: [ 9.* ]
+        dependency-version: [ prefer-lowest, prefer-stable ]
         include:
           - laravel: 9.*
             testbench: 7.*
@@ -32,7 +32,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          extensions: dom, libxml, mbstring, zip, intl, fileinfo
           coverage: none
 
       - name: Install dependencies
