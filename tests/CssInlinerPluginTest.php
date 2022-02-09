@@ -2,18 +2,24 @@
 
 namespace Stayallive\LaravelMailCssInliner\Tests;
 
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
-use Stayallive\LaravelMailCssInliner\CssInlinerPlugin;
-use Swift_Mailer;
-use Swift_Message;
-use Swift_NullTransport;
+use RuntimeException;
+use Stayallive\LaravelMailCssInliner\SymfonyMailerCssInliner;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Mailer\Event\MessageEvent;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Part\Multipart\AlternativePart;
+use Symfony\Component\Mime\Part\TextPart;
 
 class CssInlinerPluginTest extends TestCase
 {
-    /** @var array */
-    private $stubs;
+    private array $stubs;
 
-    private static $stubDefinitions = [
+    private static array $stubDefinitions = [
         'plain-text',
         'original-html',
         'original-html-with-css',
@@ -27,90 +33,96 @@ class CssInlinerPluginTest extends TestCase
     public function setUp(): void
     {
         foreach (self::$stubDefinitions as $stub) {
-            $this->stubs[$stub] = $this->cleanupHtmlStringForComparison(file_get_contents(
-                __DIR__."/stubs/{$stub}.stub"
-            ));
+            $this->stubs[$stub] = $this->cleanupHtmlStringForComparison(
+                file_get_contents(__DIR__ . "/stubs/{$stub}.stub")
+            );
         }
     }
 
     public function test_it_should_convert_html_body(): void
     {
-        $message = new Swift_Message(null, $this->stubs['original-html'], 'text/html');
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)->html($this->stubs['original-html'])
+        );
 
-        $this->fakeSendMessageUsingInlinePlugin($message);
-
-        $this->assertBodyMatchesStub($message->getBody(), 'converted-html');
+        $this->assertBodyMatchesStub($message, 'converted-html');
     }
 
     public function test_it_should_convert_html_body_with_given_css(): void
     {
-        $message = new Swift_Message(null, $this->stubs['original-html-with-css'], 'text/html');
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)->html($this->stubs['original-html-with-css']),
+            [__DIR__ . '/stubs/test.css']
+        );
 
-        $this->fakeSendMessageUsingInlinePlugin($message, [
-            __DIR__.'/stubs/test.css',
-        ]);
-
-        $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-css');
+        $this->assertBodyMatchesStub($message, 'converted-html-with-css');
     }
 
     public function test_it_should_convert_html_body_and_text_parts(): void
     {
-        $message = new Swift_Message;
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)
+                ->html($this->stubs['original-html'])
+                ->text($this->stubs['plain-text'])
+        );
 
-        $message->setBody($this->stubs['original-html'], 'text/html');
-        $message->addPart($this->stubs['plain-text'], 'text/plain');
-
-        $this->fakeSendMessageUsingInlinePlugin($message);
-
-        $this->assertBodyMatchesStub($message->getBody(), 'converted-html');
-        $this->assertBodyMatchesStub($message->getChildren()[0]->getBody(), 'plain-text');
+        $this->assertBodyMatchesStub($message, 'converted-html');
+        $this->assertBodyMatchesStub($message, 'plain-text', 'plain');
     }
 
     public function test_it_should_leave_plain_text_unmodified(): void
     {
-        $message = new Swift_Message;
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)->text($this->stubs['plain-text'])
+        );
 
-        $message->addPart($this->stubs['plain-text'], 'text/plain');
-
-        $this->fakeSendMessageUsingInlinePlugin($message);
-
-        $this->assertBodyMatchesStub($message->getChildren()[0]->getBody(), 'plain-text');
+        $this->assertBodyMatchesStub($message, 'plain-text');
     }
 
     public function test_it_should_convert_html_body_as_a_part(): void
     {
-        $message = new Swift_Message;
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)->html($this->stubs['original-html'])
+        );
 
-        $message->addPart($this->stubs['original-html'], 'text/html');
-
-        $this->fakeSendMessageUsingInlinePlugin($message);
-
-        $this->assertBodyMatchesStub($message->getChildren()[0]->getBody(), 'converted-html');
+        $this->assertBodyMatchesStub($message, 'converted-html');
     }
 
     public function test_it_should_convert_html_body_with_link_css(): void
     {
-        $message = new Swift_Message(null, $this->stubs['original-html-with-link-css'], 'text/html');
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)->html($this->stubs['original-html-with-link-css'])
+        );
 
-        $this->fakeSendMessageUsingInlinePlugin($message);
-
-        $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-css');
+        $this->assertBodyMatchesStub($message, 'converted-html-with-css');
     }
 
     public function test_it_should_convert_html_body_with_links_css(): void
     {
-        $message = new Swift_Message(null, $this->stubs['original-html-with-links-css'], 'text/html');
+        $message = $this->fakeSendMessageUsingInlinePlugin(
+            (new Email)->html($this->stubs['original-html-with-links-css'])
+        );
 
-        $this->fakeSendMessageUsingInlinePlugin($message);
-
-        $this->assertBodyMatchesStub($message->getBody(), 'converted-html-with-links-css');
+        $this->assertBodyMatchesStub($message, 'converted-html-with-links-css');
     }
 
-    private function assertBodyMatchesStub(string $body, string $stub): void
+    private function assertBodyMatchesStub(object $message, string $stub, string $mediaSubType = 'html'): void
     {
-        $body = $this->cleanupHtmlStringForComparison($body);
+        $this->assertInstanceOf(Email::class, $message);
 
-        $this->assertEquals($this->stubs[$stub], $body);
+        $body = $message->getBody();
+
+        if ($body instanceof TextPart) {
+            $actual = $body->getBody();
+        } elseif ($body instanceof AlternativePart) {
+            $actual = (new Collection($body->getParts()))->first(
+                static fn ($part) => $part instanceof TextPart && $part->getMediaType() === 'text' && $part->getMediaSubtype() === $mediaSubType
+            )->getBody();
+        } else {
+            throw new RuntimeException('Unknown message body type');
+        }
+
+        $this->assertEquals($this->stubs[$stub], $this->cleanupHtmlStringForComparison($actual));
     }
 
     private function cleanupHtmlStringForComparison(string $string): string
@@ -119,21 +131,40 @@ class CssInlinerPluginTest extends TestCase
         $string = str_replace("\n", '', trim($string));
 
         // Strip out any whitespace between HTML tags
-        $string = preg_replace('/(>)\s+(<\/?[a-z]+)/', '$1$2', $string);
-
-        return $string;
+        return preg_replace('/(>)\s+(<\/?[a-z]+)/', '$1$2', $string);
     }
 
-    private function fakeSendMessageUsingInlinePlugin(Swift_Message $message, array $inlineCssFiles = []): void
+    private function fakeSendMessageUsingInlinePlugin(Email $message, array $inlineCssFiles = []): Email
     {
-        $mailer = new Swift_Mailer(new Swift_NullTransport);
+        $processedMessage = null;
 
-        $mailer->registerPlugin(new CssInlinerPlugin($inlineCssFiles));
+        $dispatcher = new EventDispatcher;
+        $dispatcher->addListener(MessageEvent::class, static function (MessageEvent $event) use ($inlineCssFiles, &$processedMessage) {
+            $handler = new SymfonyMailerCssInliner($inlineCssFiles);
 
-        $message->setTo('test2@example.com');
-        $message->setFrom('test@example.com');
-        $message->setSubject('Test');
+            $handler->handleSymfonyEvent($event);
 
-        $mailer->send($message);
+            $processedMessage = $event->getMessage();
+        });
+
+        $mailer = new Mailer(
+            Transport::fromDsn('null://default', $dispatcher)
+        );
+
+        try {
+            $mailer->send(
+                $message->to('test2@example.com')
+                        ->from('test@example.com')
+                        ->subject('Test')
+            );
+        } catch (TransportExceptionInterface) {
+            // We are not really expecting anything to happen here considering it's a `NullTransport` we are using :)
+        }
+
+        if (!$processedMessage instanceof Email) {
+            throw new RuntimeException('No email was processed!');
+        }
+
+        return $processedMessage;
     }
 }
