@@ -8,6 +8,8 @@ use Symfony\Component\Mime\Message;
 use Symfony\Component\Mailer\Event\MessageEvent;
 use Symfony\Component\Mime\Part\AbstractPart;
 use Symfony\Component\Mime\Part\Multipart\AlternativePart;
+use Symfony\Component\Mime\Part\Multipart\MixedPart;
+use Symfony\Component\Mime\Part\Multipart\RelatedPart;
 use Symfony\Component\Mime\Part\TextPart;
 use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
 
@@ -83,18 +85,54 @@ class SymfonyMailerCssInliner
             return;
         }
 
-        if ($body instanceof TextPart) {
-            $message->setBody($this->processPart($body));
-        } elseif ($body instanceof AlternativePart) {
-            $message->setBody(new AlternativePart(
-                ...array_map(
-                    fn (AbstractPart $part) => $this->processPart($part),
-                    $body->getParts()
-                )
+        if ($body instanceof MixedPart) {
+            $parts = $body->getParts();
+
+            foreach ($parts as $index => $part) {
+                $formattedPart = $this->handleSingleAbstractPart($part);
+
+                if ($formattedPart !== null) {
+                    $parts[$index] = $part;
+                }
+            }
+
+            $message->setBody(new MixedPart(
+                ...$parts
             ));
+        } else {
+            $formattedPart = $this->handleSingleAbstractPart($body);
+
+            if ($formattedPart !== null) {
+                $message->setBody($formattedPart);
+            }
         }
     }
 
+    public function handleSingleAbstractPart(AbstractPart $abstractPart): ?AbstractPart
+    {
+        if ($abstractPart instanceof TextPart) {
+            return $this->processPart($abstractPart);
+        }
+        
+        if ($abstractPart instanceof AlternativePart) {
+            return new AlternativePart(
+                ...array_map(
+                    fn (AbstractPart $abstractPart) => $this->processPart($abstractPart),
+                    $abstractPart->getParts()
+                )
+            );
+        }
+        
+        if ($abstractPart instanceof RelatedPart) {
+            $relatedPartParts = $abstractPart->getParts();
+
+            [$mainPart] = array_splice($relatedPartParts, 0, 1);
+
+            return new RelatedPart($this->processPart($mainPart), ...$relatedPartParts);
+        }
+
+        return null;
+    }
     private function extractCssFilesFromMailBody(string $message): array
     {
         $document = new DOMDocument;
