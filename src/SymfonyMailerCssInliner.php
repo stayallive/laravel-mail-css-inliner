@@ -92,7 +92,7 @@ class SymfonyMailerCssInliner
                 $formattedPart = $this->handleSingleAbstractPart($part);
 
                 if ($formattedPart !== null) {
-                    $parts[$index] = $part;
+                    $parts[$index] = $formattedPart;
                 }
             }
 
@@ -113,7 +113,7 @@ class SymfonyMailerCssInliner
         if ($abstractPart instanceof TextPart) {
             return $this->processPart($abstractPart);
         }
-        
+
         if ($abstractPart instanceof AlternativePart) {
             return new AlternativePart(
                 ...array_map(
@@ -122,11 +122,11 @@ class SymfonyMailerCssInliner
                 )
             );
         }
-        
+
         if ($abstractPart instanceof RelatedPart) {
             $relatedPartParts = $abstractPart->getParts();
 
-            [$mainPart] = array_splice($relatedPartParts, 0, 1);
+            $mainPart = array_shift($relatedPartParts);
 
             return new RelatedPart($this->processPart($mainPart), ...$relatedPartParts);
         }
