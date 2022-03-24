@@ -133,6 +133,7 @@ class SymfonyMailerCssInliner
 
         return null;
     }
+
     private function extractCssFilesFromMailBody(string $message): array
     {
         $document = new DOMDocument;
