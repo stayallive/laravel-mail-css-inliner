@@ -2,21 +2,20 @@
 
 namespace Stayallive\LaravelMailCssInliner\Tests;
 
-use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
-use Stayallive\LaravelMailCssInliner\SymfonyMailerCssInliner;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\Mailer\Event\MessageEvent;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mime\Email;
+use Illuminate\Support\Collection;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Mime\Part\AbstractPart;
-use Symfony\Component\Mime\Part\Multipart\AlternativePart;
-use Symfony\Component\Mime\Part\Multipart\MixedPart;
-use Symfony\Component\Mime\Part\Multipart\RelatedPart;
 use Symfony\Component\Mime\Part\TextPart;
+use Symfony\Component\Mime\Part\AbstractPart;
+use Symfony\Component\Mailer\Event\MessageEvent;
+use Symfony\Component\Mime\Part\Multipart\MixedPart;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Mime\Part\Multipart\RelatedPart;
+use Symfony\Component\Mime\Part\Multipart\AlternativePart;
+use Stayallive\LaravelMailCssInliner\SymfonyMailerCssInliner;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class CssInlinerPluginTest extends TestCase
 {
@@ -54,12 +53,12 @@ class CssInlinerPluginTest extends TestCase
             $this->attachments[$attachment] = \file_get_contents(implode(DIRECTORY_SEPARATOR, [
                 __DIR__,
                 'stubs',
-                $attachment
+                $attachment,
             ]));
         }
     }
 
-    public function test_it_should_convert_html_body(): void
+    public function testItShouldConvertHtmlBody(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html'])
@@ -68,7 +67,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html');
     }
 
-    public function test_it_should_convert_html_body_with_given_css(): void
+    public function testItShouldConvertHtmlBodyWithGivenCss(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html-with-css']),
@@ -78,7 +77,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html-with-css');
     }
 
-    public function test_it_should_convert_html_body_and_text_parts(): void
+    public function testItShouldConvertHtmlBodyAndTextParts(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)
@@ -90,7 +89,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'plain-text', 'plain');
     }
 
-    public function test_it_should_leave_plain_text_unmodified(): void
+    public function testItShouldLeavePlainTextUnmodified(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->text($this->stubs['plain-text'])
@@ -99,7 +98,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'plain-text');
     }
 
-    public function test_it_should_convert_html_body_as_a_part(): void
+    public function testItShouldConvertHtmlBodyAsAPart(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html'])
@@ -108,7 +107,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html');
     }
 
-    public function test_it_should_convert_html_body_with_link_css(): void
+    public function testItShouldConvertHtmlBodyWithLinkCss(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html-with-link-css'])
@@ -117,7 +116,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html-with-css');
     }
 
-    public function test_it_should_convert_html_body_with_links_css(): void
+    public function testItShouldConvertHtmlBodyWithLinksCss(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html-with-links-css'])
@@ -126,7 +125,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html-with-links-css');
     }
 
-    public function test_it_should_convert_html_body_with_attachments(): void
+    public function testItShouldConvertHtmlBodyWithAttachments(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html'])
@@ -137,7 +136,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html');
     }
 
-    public function test_it_should_convert_html_body_with_text_parts_and_attachments(): void
+    public function testItShouldConvertHtmlBodyWithTextPartsAndAttachments(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html'])
@@ -150,7 +149,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'plain-text', 'plain');
     }
 
-    public function test_it_shloud_convert_html_body_with_raw_base64_image(): void
+    public function testItShloudConvertHtmlBodyWithRawBase64Image(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html-with-raw-image-base64'])
@@ -159,7 +158,7 @@ class CssInlinerPluginTest extends TestCase
         $this->assertBodyMatchesStub($message, 'converted-html-with-raw-image-base64');
     }
 
-    public function test_it_shloud_convert_html_body_with_raw_base64_image_and_attachments(): void
+    public function testItShloudConvertHtmlBodyWithRawBase64ImageAndAttachments(): void
     {
         $message = $this->fakeSendMessageUsingInlinePlugin(
             (new Email)->html($this->stubs['original-html-with-raw-image-base64'])
@@ -188,13 +187,13 @@ class CssInlinerPluginTest extends TestCase
             }
 
             if ($actual === null) {
-                throw new RuntimeException('Unable to find TextPart on MixedPart body');
+                throw new \RuntimeException('Unable to find TextPart on MixedPart body');
             }
         } else {
             $actual = $this->getBodyFromSinglePart($body, $mediaSubType);
 
             if ($actual === null) {
-                throw new RuntimeException('Unknown message body type : ' . get_class($body));
+                throw new \RuntimeException('Unknown message body type : ' . get_class($body));
             }
         }
 
@@ -255,7 +254,7 @@ class CssInlinerPluginTest extends TestCase
         }
 
         if (!$processedMessage instanceof Email) {
-            throw new RuntimeException('No email was processed!');
+            throw new \RuntimeException('No email was processed!');
         }
 
         return $processedMessage;

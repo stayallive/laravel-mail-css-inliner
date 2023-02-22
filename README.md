@@ -1,10 +1,9 @@
 # Laravel Mail CSS Inliner
 
-[![GitHub Actions](https://github.com/stayallive/laravel-mail-css-inliner/workflows/CI/badge.svg)](https://github.com/stayallive/laravel-mail-css-inliner/actions)
-[![Latest Stable Version](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/v/stable.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
-[![Latest Unstable Version](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/v/unstable.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
-[![Total Downloads](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/downloads.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
-[![License](https://poser.pugx.org/stayallive/laravel-mail-css-inliner/license.png)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
+[![Latest Version](https://img.shields.io/github/release/stayallive/laravel-mail-css-inliner.svg?style=flat-square)](https://github.com/stayallive/laravel-mail-css-inliner/releases)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/stayallive/laravel-mail-css-inliner/ci.yaml?branch=master&style=flat-square)](https://github.com/stayallive/laravel-mail-css-inliner/actions/workflows/ci.yaml)
+[![Total Downloads](https://img.shields.io/packagist/dt/stayallive/laravel-mail-css-inliner.svg?style=flat-square)](https://packagist.org/packages/stayallive/laravel-mail-css-inliner)
 
 ## Why?
 
@@ -64,7 +63,7 @@ Into this:
 
 ## Installation
 
-This package requires Laravel `7.x`.
+This package requires at least Laravel `9` and PHP `8`.
 
 Begin by installing this package through composer. Require it directly from the CLI to take the last stable version:
 ```bash

@@ -2,8 +2,8 @@
 
 namespace Stayallive\LaravelMailCssInliner;
 
-use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider

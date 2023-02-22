@@ -2,16 +2,15 @@
 
 namespace Stayallive\LaravelMailCssInliner;
 
-use DOMDocument;
-use Illuminate\Mail\Events\MessageSending;
 use Symfony\Component\Mime\Message;
-use Symfony\Component\Mailer\Event\MessageEvent;
-use Symfony\Component\Mime\Part\AbstractPart;
-use Symfony\Component\Mime\Part\Multipart\AlternativePart;
-use Symfony\Component\Mime\Part\Multipart\MixedPart;
-use Symfony\Component\Mime\Part\Multipart\RelatedPart;
 use Symfony\Component\Mime\Part\TextPart;
+use Illuminate\Mail\Events\MessageSending;
+use Symfony\Component\Mime\Part\AbstractPart;
+use Symfony\Component\Mailer\Event\MessageEvent;
+use Symfony\Component\Mime\Part\Multipart\MixedPart;
 use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
+use Symfony\Component\Mime\Part\Multipart\RelatedPart;
+use Symfony\Component\Mime\Part\Multipart\AlternativePart;
 
 class SymfonyMailerCssInliner
 {
@@ -19,7 +18,7 @@ class SymfonyMailerCssInliner
 
     private string $cssToAlwaysInclude;
 
-    public function __construct(array $filesToInline = [], CssToInlineStyles $converter = null)
+    public function __construct(array $filesToInline = [], ?CssToInlineStyles $converter = null)
     {
         $this->cssToAlwaysInclude = $this->loadCssFromFiles($filesToInline);
 
@@ -136,7 +135,7 @@ class SymfonyMailerCssInliner
 
     private function extractCssFilesFromMailBody(string $message): array
     {
-        $document = new DOMDocument;
+        $document = new \DOMDocument;
 
         $previousUseInternalErrors = libxml_use_internal_errors(true);
 
