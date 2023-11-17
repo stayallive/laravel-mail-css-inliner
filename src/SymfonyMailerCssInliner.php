@@ -2,6 +2,7 @@
 
 namespace Stayallive\LaravelMailCssInliner;
 
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Message;
 use Symfony\Component\Mime\Part\TextPart;
 use Illuminate\Mail\Events\MessageSending;
@@ -47,10 +48,14 @@ class SymfonyMailerCssInliner
         $this->handleSymfonyMessage($message);
     }
 
-    private function processPart(AbstractPart $part): AbstractPart
+    private function processPart(AbstractPart $part, Message $message): AbstractPart
     {
         if ($part instanceof TextPart && $part->getMediaType() === 'text' && $part->getMediaSubtype() === 'html') {
-            return $this->processHtmlTextPart($part);
+            $part = $this->processHtmlTextPart($part);
+
+            if ($message instanceof Email && $message->getHtmlBody()) {
+                $message->html($part->getBody(), $part->getPreparedHeaders()->getHeaderParameter('Content-Type', 'charset') ?: 'utf-8');
+            }
         }
 
         return $part;
@@ -88,7 +93,7 @@ class SymfonyMailerCssInliner
             $parts = $body->getParts();
 
             foreach ($parts as $index => $part) {
-                $formattedPart = $this->handleSingleAbstractPart($part);
+                $formattedPart = $this->handleSingleAbstractPart($part, $message);
 
                 if ($formattedPart !== null) {
                     $parts[$index] = $formattedPart;
@@ -96,10 +101,10 @@ class SymfonyMailerCssInliner
             }
 
             $message->setBody(new MixedPart(
-                ...$parts
+                ...$parts,
             ));
         } else {
-            $formattedPart = $this->handleSingleAbstractPart($body);
+            $formattedPart = $this->handleSingleAbstractPart($body, $message);
 
             if ($formattedPart !== null) {
                 $message->setBody($formattedPart);
@@ -107,18 +112,18 @@ class SymfonyMailerCssInliner
         }
     }
 
-    public function handleSingleAbstractPart(AbstractPart $abstractPart): ?AbstractPart
+    public function handleSingleAbstractPart(AbstractPart $abstractPart, Message $message): ?AbstractPart
     {
         if ($abstractPart instanceof TextPart) {
-            return $this->processPart($abstractPart);
+            return $this->processPart($abstractPart, $message);
         }
 
         if ($abstractPart instanceof AlternativePart) {
             return new AlternativePart(
                 ...array_map(
-                    fn (AbstractPart $abstractPart) => $this->processPart($abstractPart),
-                    $abstractPart->getParts()
-                )
+                fn (AbstractPart $abstractPart) => $this->processPart($abstractPart, $message),
+                $abstractPart->getParts(),
+            ),
             );
         }
 
@@ -127,7 +132,7 @@ class SymfonyMailerCssInliner
 
             $mainPart = array_shift($relatedPartParts);
 
-            return new RelatedPart($this->processPart($mainPart), ...$relatedPartParts);
+            return new RelatedPart($this->processPart($mainPart, $message), ...$relatedPartParts);
         }
 
         return null;
