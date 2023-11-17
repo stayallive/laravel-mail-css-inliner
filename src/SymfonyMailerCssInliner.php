@@ -121,9 +121,9 @@ class SymfonyMailerCssInliner
         if ($abstractPart instanceof AlternativePart) {
             return new AlternativePart(
                 ...array_map(
-                fn (AbstractPart $abstractPart) => $this->processPart($abstractPart, $message),
-                $abstractPart->getParts(),
-            ),
+                    fn (AbstractPart $abstractPart) => $this->processPart($abstractPart, $message),
+                    $abstractPart->getParts(),
+                ),
             );
         }
 

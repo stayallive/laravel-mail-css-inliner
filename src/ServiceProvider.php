@@ -21,7 +21,7 @@ class ServiceProvider extends BaseServiceProvider
 
         $this->app->singleton(SymfonyMailerCssInliner::class, static function ($app) {
             return new SymfonyMailerCssInliner(
-                $app['config']->get('mail-css-inliner.inline_css_files', [])
+                $app['config']->get('mail-css-inliner.inline_css_files', []),
             );
         });
 
