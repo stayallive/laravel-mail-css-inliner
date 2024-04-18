@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
-         colors="true"
-         backupGlobals="false"
-         stopOnFailure="false"
-         cacheDirectory=".phpunit.cache"
-         processIsolation="false"
-         backupStaticProperties="false"
-         bootstrap="vendor/autoload.php">
-    <coverage>
-        <include>
-            <directory suffix=".php">src/</directory>
-        </include>
-    </coverage>
-    <testsuites>
-        <testsuite name="Test Suite">
-            <directory>tests</directory>
-        </testsuite>
-    </testsuites>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" colors="true" backupGlobals="false" stopOnFailure="false" cacheDirectory=".phpunit.cache" processIsolation="false" backupStaticProperties="false" bootstrap="vendor/autoload.php">
+  <testsuites>
+    <testsuite name="Test Suite">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src/</directory>
+    </include>
+  </source>
 </phpunit>
