@@ -19,7 +19,7 @@
     "require": {
         "php": "^8.0.2",
         "ext-dom": "*",
-        "laravel/framework": "^9||^10||^11.0",
+        "laravel/framework": "^9|^10|^11|^12",
         "tijsverkoyen/css-to-inline-styles": "^2.2"
     },
     "autoload": {
@@ -36,8 +36,8 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.14",
-        "phpunit/phpunit": "^9||^10",
-        "symfony/mailer": "^6.0||^7.0"
+        "phpunit/phpunit": "^9|^10|^11",
+        "symfony/mailer": "^6|^7"
     },
     "autoload-dev": {
         "psr-4": {
