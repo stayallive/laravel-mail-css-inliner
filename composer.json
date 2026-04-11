@@ -17,9 +17,9 @@
         }
     ],
     "require": {
-        "php": "^8.0.2",
+        "php": "^8.1",
         "ext-dom": "*",
-        "laravel/framework": "^9|^10|^11|^12|^13",
+        "laravel/framework": "^10|^11|^12|^13",
         "tijsverkoyen/css-to-inline-styles": "^2.2"
     },
     "autoload": {
